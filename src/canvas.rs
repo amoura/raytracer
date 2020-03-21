@@ -1,4 +1,7 @@
 use std::ops::{Add,Sub,Mul};
+use std::io;
+use std::io::Write;
+use std::fs::File;
 use crate::maths;
 
 #[derive(Debug,Clone,Copy)]
@@ -74,6 +77,27 @@ impl Colour {
     pub fn new(red: f64, green: f64, blue: f64) -> Self {
         Self {red, green, blue}
     }
+
+    pub fn to_rgba(&self) -> u32 {
+        (Self::to_255(self.red) << 8) |
+            (Self::to_255(self.green) << 16) |
+            (Self::to_255(self.blue) << 24) |
+            255 // alpha = 1 for now
+    }
+
+    fn write(&self, file: &mut File) -> io::Result<()> {
+        write_u8(file, Self::to_255_u8(self.blue))?;
+        write_u8(file, Self::to_255_u8(self.green))?;
+        write_u8(file, Self::to_255_u8(self.red))
+    }
+
+    fn to_255(x: f64) -> u32 {
+        (x * 255.0) as u32
+    }
+
+    fn to_255_u8(x: f64) -> u8 {
+        (x * 255.0) as u8
+    }
 }
 
 const BLACK: Colour = Colour{red:0.0, green:0.0, blue:0.0};
@@ -93,6 +117,78 @@ impl Canvas {
     pub fn write_pixel(&mut self, x: usize, y: usize, c: Colour) {
         self.pixels[y*self.width + x] = c;
     }
+
+    pub fn to_bmp(&self, filename: &str) -> io::Result<()> {
+        let mut file = File::create(filename)?;
+
+        // BMP header
+        write_u8(&mut file, 0x42)?;
+        write_u8(&mut file, 0x4d)?;
+        let bmp_header_size = 14;
+        let dib_header_size = 40;
+        let pixel_array_offset = bmp_header_size + dib_header_size;
+        let bitmap_size = self.bmp_size();
+        let bmp_size = pixel_array_offset + bitmap_size;
+
+        write_u32(&mut file, bmp_size as u32)?;
+        write_u32(&mut file, 0)?;
+        write_u32(&mut file, pixel_array_offset as u32)?;
+
+        // DIB header
+        write_u32(&mut file, dib_header_size as u32)?;
+        write_i32(&mut file, (self.width as i32))?;
+        write_i32(&mut file, (self.height as i32))?;
+        write_u16(&mut file, 1)?;
+        write_u16(&mut file, 24)?; // bits per pixel
+        write_u32(&mut file, 0)?;  // RGB format
+        write_u32(&mut file, bitmap_size as u32)?;
+        write_u32(&mut file, 2835)?; // resolution, 72 dpi
+        write_u32(&mut file, 2835)?; // resolution, 72 dpi
+        write_i32(&mut file, 0)?;  // spurious
+        write_i32(&mut file, 0)?;  // spurious
+
+        // Bitmap data
+        for y in 0..self.height {
+            for x in 0..self.width {
+                self.pixel_at(x, y).write(&mut file)?;
+            }
+            for _ in 0..self.bmp_padding() {
+                write_u8(&mut file, 0)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn bmp_padding(&self) -> usize {
+        let row_size = self.width * 3;
+        let rem = row_size % 4;
+        if rem == 0 {
+            0
+        } else {
+            4 - rem
+        }
+    }
+
+    fn bmp_size(&self) -> usize {
+        (self.width*3 + self.bmp_padding())*self.height
+    }
+}
+
+fn write_u8(file: &mut File, val: u8) -> io::Result<()> {
+    file.write_all(&u8::to_le_bytes(val))
+}
+
+fn write_u16(file: &mut File, val: u16) -> io::Result<()> {
+    file.write_all(&u16::to_le_bytes(val))
+}
+
+fn write_u32(file: &mut File, val: u32) -> io::Result<()> {
+    file.write_all(&u32::to_le_bytes(val))
+}
+
+fn write_i32(file: &mut File, val: i32) -> io::Result<()> {
+    file.write_all(&i32::to_le_bytes(val))
 }
 
 #[cfg(test)]
