@@ -2,7 +2,7 @@ use std::ops::{Add,Sub,Neg,Mul,Div};
 
 const F64_SMALL_NUM: f64 = 1.0e-10;
 
-fn almost_same(x: f64, y:f64) -> bool {
+pub fn almost_same(x: f64, y:f64) -> bool {
     f64::abs(x - y) < F64_SMALL_NUM
 }
 
