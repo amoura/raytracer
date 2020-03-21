@@ -16,5 +16,5 @@ fn main() {
     paint_square(&mut c, blue, 0, 0, 128, 128);
     paint_square(&mut c, red, 384, 384, 512, 512);
     paint_square(&mut c, blue, 450, 0, 512, 62);
-    c.to_bmp("tst.bmp").expect("Failed to create .bmp file");
+//    c.to_bmp("tst.bmp").expect("Failed to create .bmp file");
 }

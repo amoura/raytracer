@@ -100,8 +100,6 @@ impl Colour {
     }
 }
 
-const BLACK: Colour = Colour{red:0.0, green:0.0, blue:0.0};
-
 impl Canvas {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
@@ -136,8 +134,8 @@ impl Canvas {
 
         // DIB header
         write_u32(&mut file, dib_header_size as u32)?;
-        write_i32(&mut file, (self.width as i32))?;
-        write_i32(&mut file, (self.height as i32))?;
+        write_i32(&mut file, self.width as i32)?;
+        write_i32(&mut file, self.height as i32)?;
         write_u16(&mut file, 1)?;
         write_u16(&mut file, 24)?; // bits per pixel
         write_u32(&mut file, 0)?;  // RGB format
@@ -211,7 +209,7 @@ mod test {
         let mut c = Canvas::new(640, 480);
         c.write_pixel(55, 190, Colour::new(1.0, 0.5, 0.5));
         assert_eq!(c.pixel_at(55, 190), Colour::new(1.0, 0.5, 0.5));
-        assert_eq!(c.pixel_at(54, 190), BLACK);
-        assert_eq!(c.pixel_at(639, 479), BLACK);
+        assert_eq!(c.pixel_at(54, 190), Colour::new(0.0, 0.0, 0.0));
+        assert_eq!(c.pixel_at(639, 479), Colour::new(0.0, 0.0, 0.0));
     }
 }

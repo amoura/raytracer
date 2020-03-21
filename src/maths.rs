@@ -14,6 +14,116 @@ pub struct Tuple {
     pub w: f64,
 }
 
+#[derive(Debug,Clone)]
+pub struct Matrix4 {
+    pub m00: f64, pub m01: f64, pub m02: f64, pub m03: f64,
+    pub m10: f64, pub m11: f64, pub m12: f64, pub m13: f64,
+    pub m20: f64, pub m21: f64, pub m22: f64, pub m23: f64,
+    pub m30: f64, pub m31: f64, pub m32: f64, pub m33: f64,
+}
+
+impl PartialEq for Matrix4 {
+    fn eq(&self, other: &Self) -> bool {
+        return almost_same(self.m00, other.m00)
+            && almost_same(self.m01, other.m01) 
+            && almost_same(self.m02, other.m02)
+            && almost_same(self.m03, other.m03)
+
+            && almost_same(self.m10, other.m10) 
+            && almost_same(self.m11, other.m11) 
+            && almost_same(self.m12, other.m12)
+            && almost_same(self.m13, other.m13)
+
+            && almost_same(self.m20, other.m20) 
+            && almost_same(self.m21, other.m21) 
+            && almost_same(self.m22, other.m22)
+            && almost_same(self.m23, other.m23)
+
+            && almost_same(self.m30, other.m30) 
+            && almost_same(self.m31, other.m31) 
+            && almost_same(self.m32, other.m32)
+            && almost_same(self.m33, other.m33);
+    }
+}
+
+impl Matrix4 {
+    pub fn new(
+        m00: f64, m01: f64, m02: f64, m03: f64,
+        m10: f64, m11: f64, m12: f64, m13: f64,
+        m20: f64, m21: f64, m22: f64, m23: f64,
+        m30: f64, m31: f64, m32: f64, m33: f64) -> Self {
+        Self {
+            m00, m01, m02, m03,
+            m10, m11, m12, m13,
+            m20, m21, m22, m23,
+            m30, m31, m32, m33,       
+        }
+    }
+}
+
+impl Matrix3 {
+    pub fn new(
+        m00: f64, m01: f64, m02: f64,
+        m10: f64, m11: f64, m12: f64,
+        m20: f64, m21: f64, m22: f64) -> Self {
+        Self {
+            m00, m01, m02,
+            m10, m11, m12,
+            m20, m21, m22,
+        }
+    }
+}
+
+impl Matrix2 {
+    pub fn new(
+        m00: f64, m01: f64,
+        m10: f64, m11: f64) -> Self {
+        Self {
+            m00, m01,
+            m10, m11,
+        }
+    }
+}
+
+impl PartialEq for Matrix3 {
+    fn eq(&self, other: &Self) -> bool {
+        return almost_same(self.m00, other.m00)
+            && almost_same(self.m01, other.m01) 
+            && almost_same(self.m02, other.m02)
+
+            && almost_same(self.m10, other.m10) 
+            && almost_same(self.m11, other.m11) 
+            && almost_same(self.m12, other.m12)
+
+            && almost_same(self.m20, other.m20) 
+            && almost_same(self.m21, other.m21) 
+            && almost_same(self.m22, other.m22);
+    }
+}
+
+impl PartialEq for Matrix2 {
+    fn eq(&self, other: &Self) -> bool {
+        return almost_same(self.m00, other.m00)
+            && almost_same(self.m01, other.m01) 
+
+            && almost_same(self.m10, other.m10) 
+            && almost_same(self.m11, other.m11);
+    }
+}
+
+#[derive(Debug,Clone)]
+pub struct Matrix3 {
+    pub m00: f64, pub m01: f64, pub m02: f64,
+    pub m10: f64, pub m11: f64, pub m12: f64,
+    pub m20: f64, pub m21: f64, pub m22: f64,
+}
+
+#[derive(Debug,Clone)]
+pub struct Matrix2 {
+    pub m00: f64, pub m01: f64,
+    pub m10: f64, pub m11: f64,
+}
+
 impl PartialEq for Tuple {
     fn eq(&self, other: &Self) -> bool {
         return almost_same(self.x, other.x)
@@ -187,5 +297,65 @@ mod tst {
         assert_eq!(Tuple::dot(v1, v2), 20.0);
         assert_eq!(Tuple::cross(v1, v2), vector(-1.0,2.0,-1.0));
         assert_eq!(Tuple::cross(v2, v1), vector(1.0,-2.0,1.0));
+    }
+
+    #[test]
+    fn matrix() {
+        let m4 = Matrix4::new(
+            1.0, 2.0, 3.0, 4.0,
+            5.0, 6.0, 7.0, 8.0,
+            9.0, 10.0, 11.0, 12.0,
+            13.0, 14.0, 15.0, 16.0);
+        assert!(almost_same(m4.m02, 3.0));
+        assert!(almost_same(m4.m10, 5.0));
+        assert!(almost_same(m4.m23, 12.0));
+        assert!(almost_same(m4.m33, 16.0));
+
+        let m4_ = Matrix4::new(
+            1.0, 2.0, 3.0, 4.0,
+            5.0, 6.0, 7.0, 8.0,
+            9.0, 10.0, 11.0, 12.0,
+            13.0, 14.0, 15.0, 16.0);
+        assert_eq!(m4, m4_);
+        let m4_ = Matrix4::new(
+            1.0, 2.0, 3.0, 4.0,
+            5.0, 6.0, 7.0, 8.0,
+            9.0, 10.0, 11.1, 12.0,
+            13.0, 14.0, 15.0, 16.0);
+            assert_ne!(m4, m4_);
+        
+        let m3 = Matrix3::new(
+            1.0, 2.0, 3.0,
+            5.0, 6.0, 7.0,
+            9.0, 10.0, 11.0);
+        assert!(almost_same(m3.m02, 3.0));
+        assert!(almost_same(m3.m10, 5.0));
+        assert!(almost_same(m3.m22, 11.0));
+
+        let m3_ = Matrix3::new(
+            1.0, 2.0, 3.0,
+            5.0, 6.0, 7.0,
+            9.0, 10.0, 11.0);
+        assert_eq!(m3, m3_);
+        let m3_ = Matrix3::new(
+            1.0, 2.0, 3.0,
+            5.0, 6.0, 7.1,
+            9.0, 10.0, 11.0);
+        assert_ne!(m3, m3_);
+
+        let m2 = Matrix2::new(
+            1.0, 2.0, 
+            5.0, 6.0);
+        assert!(almost_same(m2.m01, 2.0));
+        assert!(almost_same(m2.m10, 5.0));
+
+        let m2_ = Matrix2::new(
+            1.0, 2.0,
+            5.0, 6.0);
+        assert_eq!(m2, m2_);
+        let m2_ = Matrix2::new(
+            1.0, 2.0,
+            5.0, 6.1);
+        assert_ne!(m2, m2_);    
     }
 }
