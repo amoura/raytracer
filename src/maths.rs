@@ -8,10 +8,10 @@ fn almost_same(x: f64, y:f64) -> bool {
 
 #[derive(Debug,Clone,Copy)]
 pub struct Tuple {
-    x: f64,
-    y: f64,
-    z: f64,
-    w: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub w: f64,
 }
 
 impl PartialEq for Tuple {
