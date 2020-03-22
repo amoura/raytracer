@@ -345,6 +345,25 @@ impl Matrix4 {
         }
     }
 
+    pub fn submatrix(&self, row: usize, col: usize) -> Matrix3 {
+        let mut m = Matrix3::zero();
+        for i in 0..4 {
+            for j in 0..4 {
+                if i != row && j != col {
+                    let x = if i<row {i} else {i-1};
+                    let y = if j<col {j} else {j-1};
+                    m.set(self.at(i,j), x, y);
+                }
+            }
+        }
+        m
+    }
+
+    pub fn det(&self) -> f64 {
+        self.m00*self.cofactor(0, 0) + self.m01*self.cofactor(0, 1) +
+            self.m02*self.cofactor(0, 2) + self.m03*self.cofactor(0, 3)
+    }
+
     pub fn transpose(&self) -> Self {
         let mut m = *self;
         for i in 0..3 {
@@ -355,6 +374,19 @@ impl Matrix4 {
             }
         }
         m
+    }
+
+    fn minor(&self, row: usize, col: usize) -> f64 {
+        self.submatrix(row, col).det()
+    }
+
+    pub fn cofactor(&self, row: usize, col: usize) -> f64 {
+        let x = self.minor(row, col);
+        if (row + col) % 2 == 0 {
+            x
+        } else {
+            -x
+        }
     }
 }
 
@@ -369,6 +401,81 @@ impl Matrix3 {
             m20, m21, m22,
         }
     }
+
+    pub fn zero() -> Self {
+        Self::new(
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0)
+    }
+
+    pub fn at(&self, x: usize, y: usize) -> f64 {
+        match (x, y) {
+            (0, 0) => self.m00,
+            (0, 1) => self.m01,
+            (0, 2) => self.m02,
+
+            (1, 0) => self.m10,
+            (1, 1) => self.m11,
+            (1, 2) => self.m12,
+
+            (2, 0) => self.m20,
+            (2, 1) => self.m21,
+            (2, 2) => self.m22,
+
+            _ => panic!("Out of bounds index in Matrix3::at()"),
+        }
+    }
+
+    pub fn set(&mut self, val: f64, x: usize, y: usize) {
+        match (x, y) {
+            (0, 0) => self.m00 = val,
+            (0, 1) => self.m01 = val,
+            (0, 2) => self.m02 = val,
+
+            (1, 0) => self.m10 = val,
+            (1, 1) => self.m11 = val,
+            (1, 2) => self.m12 = val,
+
+            (2, 0) => self.m20 = val,
+            (2, 1) => self.m21 = val,
+            (2, 2) => self.m22 = val,
+
+            _ => panic!("Out of bounds index in Matrix3::at()"),
+        }
+    }
+
+    pub fn submatrix(&self, row: usize, col: usize) -> Matrix2 {
+        let mut m = Matrix2::zero();
+        for i in 0..3 {
+            for j in 0..3 {
+                if i != row && j != col {
+                    let x = if i<row {i} else {i-1};
+                    let y = if j<col {j} else {j-1};
+                    m.set(self.at(i,j), x, y);
+                }
+            }
+        }
+        m
+    }
+
+    pub fn det(&self) -> f64 {
+        self.m00*self.cofactor(0,0) + self.m01*self.cofactor(0, 1) +
+            self.m02*self.cofactor(0, 2)
+    }
+
+    fn minor(&self, row: usize, col: usize) -> f64 {
+        self.submatrix(row, col).det()
+    }
+
+    pub fn cofactor(&self, row: usize, col: usize) -> f64 {
+        let x = self.minor(row, col);
+        if (row + col) % 2 == 0 {
+            x
+        } else {
+            -x
+        }
+    }
 }
 
 impl Matrix2 {
@@ -379,6 +486,40 @@ impl Matrix2 {
             m00, m01,
             m10, m11,
         }
+    }
+
+    pub fn zero() -> Self {
+        Self::new(
+            0.0, 0.0,
+            0.0, 0.0)
+    }
+
+    pub fn at(&self, x: usize, y: usize) -> f64 {
+        match (x, y) {
+            (0, 0) => self.m00,
+            (0, 1) => self.m01,
+
+            (1, 0) => self.m10,
+            (1, 1) => self.m11,
+
+            _ => panic!("Out of bounds index in Matrix2::at()"),
+        }
+    }
+
+    pub fn set(&mut self, val: f64, x: usize, y: usize) {
+        match (x, y) {
+            (0, 0) => self.m00 = val,
+            (0, 1) => self.m01 = val,
+
+            (1, 0) => self.m10 = val,
+            (1, 1) => self.m11 = val,
+
+            _ => panic!("Out of bounds index in Matrix2::at()"),
+        }
+    }
+
+    pub fn det(&self) -> f64 {
+        self.m00*self.m11 - self.m01*self.m10
     }
 }
 
@@ -544,5 +685,57 @@ mod tst {
         assert_eq!(m4.transpose(), m4_t);
         assert_eq!(m4_t.transpose(), m4);
         assert_eq!(Matrix4::identity().transpose(), Matrix4::identity());
+
+        let m2 = Matrix2::new(
+            1.0, 5.0,
+            -3.0, 2.0);
+        assert!(almost_same(m2.det(), 17.0));
+
+        let m3 = Matrix3::new(
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0,
+            7.0, 8.0, 9.0);
+        let m3sub = Matrix2::new(
+            1.0, 2.0,
+            7.0, 8.0);
+        assert_eq!(m3.submatrix(1,2), m3sub);
+        
+        let m4sub = Matrix3::new(
+            1.0, 2.0, 8.0,
+            2.0, 4.0, 6.0,
+            3.0, 4.0, 4.0);
+        assert_eq!(m4_t.submatrix(3,3), m4sub);
+
+        let m3 = Matrix3::new(
+            3.0, 5.0, 0.0,
+            2.0, -1.0, -7.0,
+            6.0, -1.0, 5.0);
+        assert!(almost_same(m3.submatrix(1,0).det(), 25.0));
+        assert!(almost_same(m3.minor(1,0), 25.0));
+
+        assert!(almost_same(m3.minor(0,0), -12.0));
+        assert!(almost_same(m3.cofactor(0,0), -12.0));
+        assert!(almost_same(m3.minor(1,0), 25.0));
+        assert!(almost_same(m3.cofactor(1,0), -25.0));
+
+        let m3 = Matrix3::new(
+            1.0, 2.0, 6.0,
+            -5.0, 8.0, -4.0,
+            2.0, 6.0, 4.0);
+        assert!(almost_same(m3.cofactor(0,0), 56.0));        
+        assert!(almost_same(m3.cofactor(0,1), 12.0));        
+        assert!(almost_same(m3.cofactor(0,2), -46.0));        
+        assert!(almost_same(m3.det(), -196.0));  
+        
+        let m4 = Matrix4::new(
+            -2.0 , -8.0 ,  3.0 ,  5.0 ,
+            -3.0 ,  1.0 ,  7.0 ,  3.0 ,
+             1.0 ,  2.0 , -9.0 ,  6.0 ,
+            -6.0 ,  7.0 ,  7.0 , -9.0);
+        assert!(almost_same(m4.cofactor(0,0), 690.0));        
+        assert!(almost_same(m4.cofactor(0,1), 447.0));        
+        assert!(almost_same(m4.cofactor(0,2), 210.0));        
+        assert!(almost_same(m4.cofactor(0,3), 51.0));        
+        assert!(almost_same(m4.det(), -4071.0));  
     }
 }
